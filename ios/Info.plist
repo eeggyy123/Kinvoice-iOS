@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+    <key>APIBaseURL</key><string>https://api.example.com</string>
+    <key>APIAccessToken</key><string></string>
+    <key>CFBundleDisplayName</key><string>家声</string>
+    <key>NSMicrophoneUsageDescription</key><string>用于记录家人的口述故事，录音由你决定是否保存。</string>
+    <key>NSSpeechRecognitionUsageDescription</key><string>用于把你主动选择的家庭口述录音转成可校订文字。</string>
+    <key>UILaunchScreen</key><dict/>
+    <key>UIApplicationSceneManifest</key><dict><key>UIApplicationSupportsMultipleScenes</key><false/></dict>
+    <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
+</dict></plist>

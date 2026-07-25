@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>家声 · Windows 交互预览</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="preview-shell">
+    <aside class="preview-note">
+      <div class="brand-lockup"><img src="../src/assets/images/logo.png" alt="家声图标"><div><strong>KinVoice 家声</strong><span>家庭知识传承库</span></div></div>
+      <h1>把家人的故事，<br>变成能继续使用的知识。</h1>
+      <p>这是 Windows 交互预览。试着采集一段口述、校订 AI 草稿，或在“问家”里询问外婆红烧肉的做法。</p>
+      <div class="preview-status"><span></span> 本地演示数据，不会上传</div>
+    </aside>
+
+    <section class="phone" aria-label="家声 iPhone 应用预览">
+      <div class="statusbar"><b>9:41</b><span>● ● ▰</span></div>
+      <div id="app-content" class="app-content"></div>
+      <nav class="tabbar" aria-label="主要页面">
+        <button data-tab="library" class="active"><span>▥</span>记忆库</button>
+        <button data-tab="capture"><span>●</span>采集</button>
+        <button data-tab="ask"><span>◌</span>问家</button>
+        <button data-tab="family"><span>♧</span>家庭</button>
+      </nav>
+    </section>
+  </main>
+
+  <dialog id="dialog"><div id="dialog-content"></div></dialog>
+  <div id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
