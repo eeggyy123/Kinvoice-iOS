@@ -21,6 +21,14 @@
 
 预览使用独立的内存 SwiftData 数据库，并自动载入演示家庭，不会改动模拟器或真机数据。录音、Apple Speech、网络和音频路由仍应使用 iPhone Simulator 或真机通过 `Command + R` 验证。
 
+## 无付费账号运行模拟器
+
+- Xcode 自带的 iOS Simulator 和 SwiftUI Canvas 不需要 Apple Developer Program，也不需要注册 Bundle ID。
+- 顶部运行目标必须选择具体的 iPhone Simulator，不能选择 `Any iOS Device (arm64)`、已连接 iPhone 或 `My Mac`。
+- 工程仅对 `iphonesimulator` 关闭签名要求；真机和 Archive 仍保留 Apple 的正式签名流程。
+- 如果设备列表没有任何 iPhone Simulator，请在 `Xcode > Settings > Platforms` 下载一个 iOS Simulator Runtime。这是运行时未安装，不是账号或 Bundle ID 问题。
+- 当前 Bundle ID `com.kinvoice.familyarchive` 足以用于本地模拟器；TestFlight 前再换成团队注册的唯一 Bundle ID。
+
 ## 产品边界
 
 家声的第一版只有一个主功能：家庭知识传承库。音频采集、AI 整理、来源引用问答和系统语音回听都是记忆条目的子模块。

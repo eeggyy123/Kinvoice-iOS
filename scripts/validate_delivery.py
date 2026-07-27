@@ -36,11 +36,28 @@ def validate_ios() -> None:
         require(resource in project, f"{resource} is not referenced by the Xcode project")
     require("IPHONEOS_DEPLOYMENT_TARGET = 17.0" in project, "deployment target must be iOS 17.0")
     require("XCRemoteSwiftPackageReference" not in project, "unexpected remote Swift package dependency")
+    require(
+        '"CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]" = NO' in project,
+        "simulator builds must not require Apple Developer signing",
+    )
 
     with (IOS / "Info.plist").open("rb") as stream:
         info = plistlib.load(stream)
-    for key in ("APIBaseURL", "NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription"):
+    for key in (
+        "APIBaseURL",
+        "CFBundleIdentifier",
+        "CFBundleExecutable",
+        "CFBundlePackageType",
+        "CFBundleShortVersionString",
+        "CFBundleVersion",
+        "NSMicrophoneUsageDescription",
+        "NSSpeechRecognitionUsageDescription",
+    ):
         require(bool(info.get(key)), f"Info.plist is missing {key}")
+    require(
+        info["CFBundleIdentifier"] == "$(PRODUCT_BUNDLE_IDENTIFIER)",
+        "CFBundleIdentifier must inherit PRODUCT_BUNDLE_IDENTIFIER",
+    )
     require("NSAppTransportSecurity" not in info, "do not add an App Transport Security exception")
 
     with (IOS / "PrivacyInfo.xcprivacy").open("rb") as stream:
@@ -57,7 +74,8 @@ def validate_ios() -> None:
     require(color_type not in {4, 6}, "App Icon must not contain an alpha channel")
 
     print(f"OK: shared scheme references {len(swift_files)} Swift files and required resources")
-    print("OK: iOS 17 target, no remote packages or ATS exception")
+    print("OK: iOS 17 target, account-free simulator signing configuration")
+    print("OK: no remote packages or ATS exception")
     print("OK: Info.plist, privacy manifest and opaque 1024px App Icon")
     if info["APIBaseURL"] == "https://api.example.com":
         print("ACTION REQUIRED: replace APIBaseURL before a TestFlight archive")
