@@ -191,6 +191,7 @@ Kinvoice-iOS/
 - [提交前待办与产品打磨](docs/03-提交前待办与产品打磨.md)
 - [App 总结与 Mac 交付手册](docs/04-App总结与Mac交付手册.md)
 - [交付验收状态](docs/05-交付验收状态.md)
+- [产品优化与商业化规划](docs/06-KinVoice产品优化与商业化规划.md)
 
 ## License
 
