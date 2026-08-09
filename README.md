@@ -125,10 +125,10 @@ SwiftUI Canvas：打开 `RootTabView.swift`，按 `Option + Command + Return`，
 Windows 或 macOS 都可以直接预览主要流程：
 
 ```bash
-python -m http.server 4173 --bind 127.0.0.1 --directory preview
+python -m http.server 4173 --bind 127.0.0.1 --directory .
 ```
 
-打开 [http://127.0.0.1:4173/](http://127.0.0.1:4173/)。预览数据只保存在当前浏览器中，不会上传。
+打开 [http://127.0.0.1:4173/preview/](http://127.0.0.1:4173/preview/)。预览数据只保存在当前浏览器中，不会上传。网页版支持记忆搜索/编辑、采访问题编辑、浏览器录音、带来源本地问家、家庭成员管理和 JSON 导出。
 
 ### 启动 AI 后端
 
