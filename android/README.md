@@ -68,4 +68,5 @@ KINVOICE_KEY_PASSWORD=your-key-password
 
 - [隐私政策](../docs/07-Android隐私政策.md)
 - [上架与合规清单](docs/ANDROID-RELEASE-CHECKLIST.md)
+- [本次构建验收记录](docs/BUILD-VERIFICATION.md)
 - [商店文案](store-assets/STORE-LISTING-zh-CN.md)

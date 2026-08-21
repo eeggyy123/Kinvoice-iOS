@@ -59,7 +59,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun discardRecording(context:Context) { if (recordingName.isNotBlank()) context.getFileStreamPath(recordingName).delete(); recordingName = "" }
     fun play(context: Context, path:String, onDone:()->Unit) {
         stopPlayback(); if (path.isBlank()) return
-        player = MediaPlayer().apply { setDataSource(context.getFileStreamPath(path).absolutePath); setOnCompletionListener { stopPlayback(); onDone() }; prepare(); start() }
+        runCatching {
+            player = MediaPlayer().apply { setDataSource(context.getFileStreamPath(path).absolutePath); setOnCompletionListener { stopPlayback(); onDone() }; prepare(); start() }
+        }.onFailure { stopPlayback(); onDone() }
     }
     fun stopPlayback() { player?.stop(); player?.release(); player = null }
 

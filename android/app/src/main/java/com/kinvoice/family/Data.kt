@@ -74,7 +74,11 @@ class KinVoiceRepository(private val context: Context, private val dao: KinVoice
     val prompts = dao.observePrompts()
 
     suspend fun seedIfEmpty() {
-        if (dao.memoryCount() > 0) return
+        val preferences = context.getSharedPreferences("kinvoice_state", Context.MODE_PRIVATE)
+        if (preferences.getBoolean("initial_seed_completed", false) || dao.memoryCount() > 0) {
+            preferences.edit().putBoolean("initial_seed_completed", true).apply()
+            return
+        }
         listOf(
             PersonEntity(name = "林秀兰", relation = "外婆", note = "擅长苏州家常菜和传统节气手艺"),
             PersonEntity(name = "周明芳", relation = "妈妈", note = "喜欢缝纫，也负责整理旧照片"),
@@ -90,6 +94,7 @@ class KinVoiceRepository(private val context: Context, private val dao: KinVoice
         )
         demo.forEach { dao.saveMemory(it) }
         savePrompts(defaultPrompts)
+        preferences.edit().putBoolean("initial_seed_completed", true).apply()
     }
 
     suspend fun saveMemory(memory: MemoryEntity) = dao.saveMemory(memory)

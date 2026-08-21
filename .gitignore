@@ -1,5 +1,7 @@
 # Android / Gradle
 .gradle/
+.local-tooling/
+dist/
 **/build/
 local.properties
 *.jks
