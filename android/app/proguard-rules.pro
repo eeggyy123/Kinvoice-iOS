@@ -1,0 +1,3 @@
+-keepattributes Signature,*Annotation*
+-keep class com.kinvoice.family.network.** { *; }
+-dontwarn javax.annotation.**

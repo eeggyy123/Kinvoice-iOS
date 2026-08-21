@@ -17,7 +17,7 @@
 
 KinVoice 家声面向希望记录父母、祖辈故事与生活经验的家庭。它不是通用聊天机器人，也不是声音克隆工具；它围绕一条完整的传承链路工作：**采访、录音、转写、AI 整理、家人校订、保存、检索、带来源问答与原声回听**。
 
-项目面向 Apple 生态开发，也是 2026 年移动应用创新赛启航赛道的参赛作品工程。
+项目最初面向 Apple 生态开发，也是 2026 年移动应用创新赛启航赛道的参赛作品工程。仓库现在同时提供 Kotlin、Jetpack Compose 与 Room 构建的原生 Android 版本，可生成 APK/AAB，并按 Google Play 与主流国内安卓市场要求准备发布。
 
 ## 核心闭环
 
@@ -170,6 +170,7 @@ Kinvoice-iOS/
 │   ├── Assets.xcassets/         App Icon 与资源
 │   ├── PrivacyInfo.xcprivacy    Apple 隐私清单
 │   └── verify_mac_build.sh      无签名模拟器构建检查
+├── android/                     Kotlin / Compose / Room 原生 Android App
 ├── backend/                     精简 FastAPI AI 适配层
 ├── preview/                     浏览器交互预览
 ├── docs/                        产品决策、计划、审计和交付文档
@@ -192,6 +193,9 @@ Kinvoice-iOS/
 - [App 总结与 Mac 交付手册](docs/04-App总结与Mac交付手册.md)
 - [交付验收状态](docs/05-交付验收状态.md)
 - [产品优化与商业化规划](docs/06-KinVoice产品优化与商业化规划.md)
+- [Android 隐私政策](docs/07-Android隐私政策.md)
+- [Android 构建与签名说明](android/README.md)
+- [Android 上架与合规清单](android/docs/ANDROID-RELEASE-CHECKLIST.md)
 
 ## License
 
