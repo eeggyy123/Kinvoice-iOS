@@ -186,20 +186,6 @@ Kinvoice-iOS/
 
 尚未纳入当前版本：CloudKit 多设备共享、实时边录边转写、完整家谱和声音克隆。这些能力不会在项目介绍中被描述为已完成。
 
-## 文档
-
-- [产品理解与决策](docs/00-理解与产品决策.md)
-- [七天 TestFlight 交付计划](docs/01-七天交付计划.md)
-- [现有工程审计](docs/02-现有工程审计.md)
-- [提交前待办与产品打磨](docs/03-提交前待办与产品打磨.md)
-- [App 总结与 Mac 交付手册](docs/04-App总结与Mac交付手册.md)
-- [交付验收状态](docs/05-交付验收状态.md)
-- [产品优化与商业化规划](docs/06-KinVoice产品优化与商业化规划.md)
-- [Android 隐私政策](docs/07-Android隐私政策.md)
-- [Android 构建与签名说明](android/README.md)
-- [Android 上架与合规清单](android/docs/ANDROID-RELEASE-CHECKLIST.md)
-- [AI 采访与开箱体验开发规划](docs/08-AI采访与开箱体验开发规划.md)
-
 ## License
 
 本项目使用 [MIT License](LICENSE)。
