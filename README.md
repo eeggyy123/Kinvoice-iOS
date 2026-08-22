@@ -89,6 +89,8 @@ flowchart LR
 - `GET /health`
 - `POST /v1/memories/draft`
 - `POST /v1/knowledge/ask`
+- `POST /v1/interviews/next`
+- `POST /v1/interviews/summarize`
 
 后端是无状态的 AI 适配层：不保存家庭记忆或录音，只接收完成当前请求所需的文字。模型回答没有有效来源时，服务会拒绝展示无依据内容或降级为可核对原文。
 
@@ -146,19 +148,19 @@ uvicorn app.main:app --reload --port 8000
 
 ```dotenv
 LLM_API_KEY=your-secret-key
-LLM_API_BASE=https://your-relay.example/v1
-LLM_MODEL=your-model-name
+LLM_API_BASE=https://cctq.ai/v1
+LLM_MODEL=your-cctq-model-id
 ```
 
-模型密钥只能保存在服务器，不得写入 Swift、`Info.plist`、README、截图或 Git 历史。iOS 的 `APIBaseURL` 应指向部署后的 KinVoice HTTPS 后端，而不是模型中转站本身。
+模型密钥只能保存在服务器，不得写入 Swift/Kotlin、`Info.plist`、BuildConfig、README、截图或 Git 历史。iOS/Android 的 API 地址应指向部署后的 KinVoice HTTPS 后端，而不是 cctq.ai 本身。
 
 ## 隐私与安全边界
 
 - 家庭记忆和录音默认保存在本机。
-- 只有用户主动使用 AI 整理或问答时，才发送当前请求所需文字。
+- 只有用户主动使用 AI 采访、整理或问答时，才发送当前请求所需文字。
 - 后端日志只记录字符数、候选条目数量和错误类型，不记录家庭正文。
 - 删除全部本地数据时，同时删除 SwiftData 条目与关联录音文件。
-- 当前版本不提供声音克隆，不依赖 vivo SDK 或 vivo TTS。
+- Android 采访者使用明确标注的系统 AI 合成音色，不是声音克隆；当前版本不依赖 vivo SDK 或 vivo TTS。
 - `.env`、API Key、私钥、日志、数据库和虚拟环境均不应提交。
 
 ## 项目结构
@@ -180,7 +182,7 @@ Kinvoice-iOS/
 
 ## 当前范围
 
-已实现：本地记忆 CRUD、完整搜索、家庭成员 CRUD、采访题编辑、录音与试听、录音后 Apple Speech 转写、AI 草稿、人工校订、带来源问答、原声回放、系统朗读、演示数据和隐私删除。
+已实现：本地记忆 CRUD、完整搜索、家庭成员 CRUD、首次使用引导、默认空白家庭、逐轮 AI 采访、系统语音识别、三种 AI 合成采访音色、人物简介与多条记忆草稿校订、带来源问答、原声回放、系统朗读、导出和隐私删除。iOS 与 Android 的具体能力以各平台文档为准。
 
 尚未纳入当前版本：CloudKit 多设备共享、实时边录边转写、完整家谱和声音克隆。这些能力不会在项目介绍中被描述为已完成。
 
@@ -196,6 +198,7 @@ Kinvoice-iOS/
 - [Android 隐私政策](docs/07-Android隐私政策.md)
 - [Android 构建与签名说明](android/README.md)
 - [Android 上架与合规清单](android/docs/ANDROID-RELEASE-CHECKLIST.md)
+- [AI 采访与开箱体验开发规划](docs/08-AI采访与开箱体验开发规划.md)
 
 ## License
 

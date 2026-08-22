@@ -43,9 +43,12 @@ private val Accent = Color(0xFFA94331); private val AccentSoft = Color(0xFFF4DFD
 
 class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private var tts: TextToSpeech? = null
-    override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState); enableEdgeToEdge(); tts=TextToSpeech(this,this); setContent { KinVoiceTheme { KinVoiceApp(onSpeak={ speak(it) }) } } }
+    override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState); enableEdgeToEdge(); tts=TextToSpeech(this,this); setContent { KinVoiceTheme { KinVoiceApp(onSpeak={ text,voice -> speak(text,voice) }) } } }
     override fun onInit(status:Int) { if(status==TextToSpeech.SUCCESS) tts?.language=Locale.SIMPLIFIED_CHINESE }
-    private fun speak(text:String) { tts?.speak(text,TextToSpeech.QUEUE_FLUSH,null,"kinvoice") }
+    private fun speak(text:String, voice:InterviewerVoice=InterviewerVoice.WARM) {
+        tts?.setSpeechRate(voice.rate); tts?.setPitch(voice.pitch)
+        tts?.speak(text,TextToSpeech.QUEUE_FLUSH,null,"kinvoice")
+    }
     override fun onDestroy() { tts?.stop(); tts?.shutdown(); super.onDestroy() }
 }
 
@@ -55,14 +58,17 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
 enum class AppTab(val label:String) { Library("记忆库"), Capture("采集"), Ask("问家"), Family("家庭") }
 
-@Composable fun KinVoiceApp(vm:AppViewModel=viewModel(), onSpeak:(String)->Unit) {
+@Composable fun KinVoiceApp(vm:AppViewModel=viewModel(), onSpeak:(String,InterviewerVoice)->Unit) {
     val context = LocalContext.current
+    val preferences=remember{context.getSharedPreferences("kinvoice_state",android.content.Context.MODE_PRIVATE)}
+    var onboardingComplete by rememberSaveable{mutableStateOf(preferences.getBoolean("onboarding_completed",false))}
     var tab by rememberSaveable { mutableStateOf(AppTab.Library) }
     val memories by vm.memories.collectAsState(); val people by vm.people.collectAsState(); val prompts by vm.prompts.collectAsState()
+    if(!onboardingComplete){ OnboardingScreen{person->vm.savePerson(person);preferences.edit().putBoolean("onboarding_completed",true).apply();onboardingComplete=true;tab=AppTab.Capture};return }
     Scaffold(containerColor=Paper, bottomBar={ NavigationBar(containerColor=Color.White) { AppTab.entries.forEach { item -> NavigationBarItem(selected=tab==item,onClick={tab=item},icon={Icon(when(item){AppTab.Library->Icons.Default.AutoStories;AppTab.Capture->Icons.Default.Mic;AppTab.Ask->Icons.Default.QuestionAnswer;AppTab.Family->Icons.Default.Group},null)},label={Text(item.label)}) } } }) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) { when(tab) {
-            AppTab.Library -> LibraryScreen(memories,{tab=AppTab.Capture},vm::saveMemory,vm::deleteMemory,onSpeak) { path, done -> vm.play(context, path, done) }
-            AppTab.Capture -> CaptureScreen(vm,people,prompts.map{it.text}) { tab=AppTab.Library }
+            AppTab.Library -> LibraryScreen(memories,{tab=AppTab.Capture},vm::saveMemory,vm::deleteMemory,{onSpeak(it,InterviewerVoice.CLEAR)}) { path, done -> vm.play(context, path, done) }
+            AppTab.Capture -> InterviewScreen(vm,people,{text,voice->onSpeak(text,voice)}) { tab=AppTab.Library }
             AppTab.Ask -> AskScreen(vm)
             AppTab.Family -> FamilyScreen(vm,people,memories)
         } }
@@ -80,7 +86,7 @@ enum class AppTab(val label:String) { Library("记忆库"), Capture("采集"), A
         item { PageHeader("家庭知识传承库","记忆库","把家人的声音、经验和手艺，留给下一代。") { FilledTonalIconButton(onClick=onCapture){Icon(Icons.Default.Add,"开始采访")} } }
         item { Row(Modifier.padding(horizontal=20.dp).fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)){Metric("记忆",memories.size.toString(),Modifier.weight(1f));Metric("已确认",memories.count{it.confirmed}.toString(),Modifier.weight(1f));Metric("原声",memories.count{it.audioPath.isNotBlank()}.toString(),Modifier.weight(1f))} }
         item { OutlinedTextField(query,{query=it},Modifier.padding(20.dp,18.dp,20.dp,8.dp).fillMaxWidth(),placeholder={Text("搜索人物、地点、手艺或原话")},leadingIcon={Icon(Icons.Default.Search,null)},singleLine=true); Row(Modifier.padding(horizontal=20.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){listOf("全部","待校订","手艺","节气").forEach{f->FilterChip(selected=filter==f,onClick={filter=f},label={Text(f)})}}; Text("${filtered.size} 条家庭记忆",Modifier.padding(20.dp,15.dp,20.dp,8.dp),color=Muted,fontSize=12.sp) }
-        if(filtered.isEmpty()) item { EmptyState("没有找到相关记忆","换个人物、地点或原话试试") }
+        if(filtered.isEmpty()) item { Column(horizontalAlignment=Alignment.CenterHorizontally){EmptyState(if(memories.isEmpty())"从第一段家人故事开始" else "没有找到相关记忆",if(memories.isEmpty())"AI 采访者会逐步提问，保存前由你确认" else "换个人物、地点或原话试试");if(memories.isEmpty())Button(onClick=onCapture){Icon(Icons.Default.Mic,null);Text(" 开始第一次采访")}} }
         items(filtered,key={it.id}) { memory -> MemoryCard(memory){selected=memory} }
         item { Spacer(Modifier.height(20.dp)) }
     }

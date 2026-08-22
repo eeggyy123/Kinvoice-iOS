@@ -16,10 +16,18 @@ data class KnowledgeMemory(val id:String, val title:String, val content:String, 
 data class AskRequest(val question:String, val memories:List<KnowledgeMemory>)
 data class Citation(@Json(name="memory_id") val memoryId:String, val title:String, val excerpt:String)
 data class AskResponse(val answer:String, val citations:List<Citation> = emptyList(), val grounded:Boolean = false)
+data class InterviewTurnDto(val role:String, val content:String)
+data class InterviewRequest(@Json(name="narrator_name") val narratorName:String, val relation:String, val theme:String, val turns:List<InterviewTurnDto>)
+data class InterviewNextResponse(val question:String, val reason:String = "", @Json(name="should_finish") val shouldFinish:Boolean = false, val degraded:Boolean = false)
+data class InterviewProfileDto(@Json(name="display_name") val displayName:String, val relation:String, val bio:String = "", val traits:List<String> = emptyList())
+data class InterviewMemoryDto(val title:String, val summary:String = "", val content:String, @Json(name="time_hint") val timeHint:String?, val location:String?, val topics:List<String> = emptyList(), val quote:String?, @Json(name="source_turns") val sourceTurns:List<Int> = emptyList(), @Json(name="needs_review") val needsReview:Boolean = true)
+data class InterviewSummaryResponse(val profile:InterviewProfileDto, val memories:List<InterviewMemoryDto> = emptyList(), val degraded:Boolean = false)
 
 interface KinVoiceApi {
     @POST("v1/memories/draft") suspend fun draft(@Body request: DraftRequest): DraftResponse
     @POST("v1/knowledge/ask") suspend fun ask(@Body request: AskRequest): AskResponse
+    @POST("v1/interviews/next") suspend fun interviewNext(@Body request: InterviewRequest): InterviewNextResponse
+    @POST("v1/interviews/summarize") suspend fun interviewSummarize(@Body request: InterviewRequest): InterviewSummaryResponse
 }
 
 object ApiFactory {

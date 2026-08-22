@@ -1,5 +1,14 @@
 # Android 上架与合规清单
 
+## 0. AI 采访与 cctq.ai 阻断项
+
+- [ ] `backend/.env` 已配置 `LLM_API_BASE=https://cctq.ai/v1`、真实 API Key 和账号可用模型 ID，且文件未被 Git 跟踪。
+- [ ] 使用无私人资料的测试对话验证 `/v1/interviews/next` 与 `/v1/interviews/summarize`。
+- [ ] KinVoice 后端已部署到公网 HTTPS，Android 中不包含 cctq.ai Key。
+- [ ] 已核实并公开 cctq.ai 与实际模型提供方的运营主体、处理地区、保留期限和训练政策。
+- [ ] 应用内统一使用“AI 合成音色”，未宣称音色克隆、真人复刻或家人原声。
+- [ ] 人物简介和记忆草稿保存前可编辑、取消选择或全部放弃。
+
 ## 1. 工程已提供的控制
 
 - [x] 原生 Kotlin/Compose，不是 WebView 壳。

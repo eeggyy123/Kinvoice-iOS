@@ -18,6 +18,9 @@ import java.io.File
 
 data class DraftUi(val title:String, val summary:String, val content:String, val author:String, val timeHint:String="", val location:String="", val quote:String="", val topics:List<String> = emptyList())
 data class AnswerUi(val text:String, val sources:List<MemoryEntity>, val online:Boolean)
+data class InterviewTurnUi(val role:String, val content:String)
+data class InterviewNextUi(val question:String, val shouldFinish:Boolean, val online:Boolean)
+data class InterviewSummaryUi(val profile:InterviewProfileDto, val memories:List<InterviewMemoryDto>, val online:Boolean)
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as KinVoiceApplication).repository
@@ -29,7 +32,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     var player: MediaPlayer? = null; private set
     var recordingName: String = ""; private set
 
-    init { viewModelScope.launch { repository.seedIfEmpty() } }
+    init { viewModelScope.launch { repository.initializeIfNeeded() } }
     fun saveMemory(memory:MemoryEntity) = viewModelScope.launch { repository.saveMemory(memory) }
     fun deleteMemory(memory:MemoryEntity) = viewModelScope.launch { repository.deleteMemory(memory) }
     fun savePerson(person:PersonEntity) = viewModelScope.launch { repository.savePerson(person) }
@@ -79,6 +82,32 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 val local = LocalKnowledge.ask(question,current); AnswerUi(local.first,local.second,false)
             }
         } else { val local=LocalKnowledge.ask(question,current); AnswerUi(local.first,local.second,false) }
+    }
+    suspend fun nextInterviewQuestion(narrator:String, relation:String, theme:String, turns:List<InterviewTurnUi>): Result<InterviewNextUi> = runCatching {
+        val request = InterviewRequest(narrator, relation, theme, turns.map { InterviewTurnDto(it.role,it.content) })
+        val remote = api?.interviewNext(request)
+        if (remote != null) InterviewNextUi(remote.question,remote.shouldFinish,!remote.degraded)
+        else {
+            val answerCount=turns.count{it.role=="user"&&it.content!="我想跳过这个问题。"}; val questions=KinVoiceRepository.defaultPrompts
+            InterviewNextUi(questions[answerCount.coerceAtMost(questions.lastIndex)],answerCount>=6,false)
+        }
+    }
+    suspend fun summarizeInterview(narrator:String, relation:String, theme:String, turns:List<InterviewTurnUi>): Result<InterviewSummaryUi> = runCatching {
+        val request=InterviewRequest(narrator,relation,theme,turns.map{InterviewTurnDto(it.role,it.content)})
+        val remote=api?.interviewSummarize(request)
+        if(remote!=null) InterviewSummaryUi(remote.profile,remote.memories,!remote.degraded) else {
+            val answers=turns.mapIndexedNotNull{i,t->if(t.role=="user"&&t.content!="我想跳过这个问题。") i to t.content else null}
+            InterviewSummaryUi(
+                InterviewProfileDto(narrator,relation,answers.joinToString(" "){it.second}.take(300)),
+                answers.take(5).map{(index,text)->InterviewMemoryDto(text.substringBefore('。').take(28).ifBlank{"一段家庭讲述"},text.take(120),text,null,null,listOf(theme),text.substringBefore('。').take(100),listOf(index))},
+                false
+            )
+        }
+    }
+    fun saveInterviewResult(person:PersonEntity, memories:List<MemoryEntity>) = viewModelScope.launch {
+        val existing=people.value.firstOrNull{it.name==person.name}
+        repository.savePerson(if(existing==null) person else existing.copy(relation=person.relation,note=person.note))
+        memories.forEach { repository.saveMemory(it) }
     }
     fun export(context:Context): Intent {
         val root = JSONObject().put("exportedAt", System.currentTimeMillis()).put("memories", JSONArray().apply { memories.value.forEach { put(JSONObject().put("id",it.id).put("title",it.title).put("summary",it.summary).put("content",it.content).put("author",it.author).put("topics",JSONArray(it.topicList())).put("timeHint",it.timeHint).put("location",it.location).put("quote",it.quote).put("confirmed",it.confirmed)) } }).put("people", JSONArray().apply { people.value.forEach { put(JSONObject().put("name",it.name).put("relation",it.relation).put("role",it.role).put("note",it.note)) } })

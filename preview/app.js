@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'kinvoice-web-v3';
+const STORAGE_KEY = 'kinvoice-web-v7';
 
 const seed = {
   tab: 'library',
@@ -37,6 +37,10 @@ const seed = {
 
 function loadState() {
   const defaults = JSON.parse(JSON.stringify(seed));
+  defaults.memories = [];
+  defaults.people = [];
+  defaults.onboarded = false;
+  defaults.interview = null;
   try { return { ...defaults, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') }; } catch { return defaults; }
 }
 const state = loadState();
@@ -47,7 +51,7 @@ const toast = document.querySelector('#toast');
 
 function esc(value = '') { return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function persist() {
-  const data = { memories: state.memories, people: state.people, prompts: state.prompts };
+  const data = { memories: state.memories, people: state.people, prompts: state.prompts, onboarded: state.onboarded, interview: state.interview };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(notify.timer); notify.timer = setTimeout(() => toast.classList.remove('show'), 2200); }
@@ -58,6 +62,7 @@ function statusClass(status) { return status === 'confirmed' ? 'confirmed' : '';
 function closeDialog() { if (dialog.open) dialog.close(); }
 
 function render() {
+  if ((!state.onboarded || !state.people.length) && window.renderKinVoiceOnboarding) return window.renderKinVoiceOnboarding();
   const titleMap = { library: ['家庭知识传承库', '记忆库'], capture: ['引导式采访', '采集口述'], ask: ['仅依据家庭资料', '问家'], family: ['成员与数据', '家庭协作'] };
   const [eyebrow, title] = titleMap[state.tab];
   app.innerHTML = `<div class="app-shell">
@@ -68,7 +73,7 @@ function render() {
       <div class="sidebar-foot"><span class="status-dot"></span>本地体验模式<br>数据保存在当前浏览器</div>
     </aside>
     <main class="workspace">
-      <header class="topbar"><div class="mobile-brand"><img src="../ios/Assets.xcassets/AppIcon.appiconset/AppIcon-1024-opaque.png" alt=""><span>家声</span></div><div class="breadcrumb"><small>${eyebrow}</small><strong>${title}</strong></div><div class="top-actions"><button class="secondary desktop-only" id="export-data">导出家庭资料</button><button class="icon-button" id="reset-data" title="恢复演示数据" aria-label="恢复演示数据">↺</button></div></header>
+      <header class="topbar"><div class="mobile-brand"><img src="../ios/Assets.xcassets/AppIcon.appiconset/AppIcon-1024-opaque.png" alt=""><span>家声</span></div><div class="breadcrumb"><small>${eyebrow}</small><strong>${title}</strong></div><div class="top-actions"><button class="secondary desktop-only" id="export-data">导出家庭资料</button><button class="icon-button" id="reset-data" title="重新开始" aria-label="重新开始">↺</button></div></header>
       <div class="content" id="content"></div>
     </main>
     <nav class="mobile-tabs" aria-label="主要页面">${navItem('library', '▥', '记忆库')} ${navItem('capture', '●', '采集')} ${navItem('ask', '◌', '问家')} ${navItem('family', '♧', '家庭')}</nav>
@@ -102,8 +107,9 @@ function renderLibrary(root) {
   root.innerHTML = `${pageIntro('家庭知识传承库', '记忆库', '把家人的声音、经验和手艺，留给下一代。', '<button class="primary" id="quick-capture">＋ 开始一次采访</button>')}
     <div class="stats"><div class="stat"><small>已保存记忆</small><strong>${state.memories.length}</strong><span>条家庭内容</span></div><div class="stat"><small>家人来源</small><strong>${people}</strong><span>位讲述者</span></div><div class="stat"><small>已确认</small><strong>${confirmed}</strong><span>条可放心引用</span></div><div class="stat"><small>共同校订</small><strong>${Math.min(confirmed, 4)}</strong><span>次家庭参与</span></div></div>
     <div class="toolbar"><div class="search"><input id="library-search" aria-label="搜索家庭记忆" placeholder="搜索人物、地点、手艺或原话" value="${esc(state.query)}"></div><div class="filter-row">${['全部', '待校订', '手艺', '节气', '旧物'].map(f => `<button class="chip ${state.filter === f ? 'active' : ''}" data-filter="${f}">${f}</button>`).join('')}</div></div>
-    <div class="section-head"><h2>${state.query || state.filter !== '全部' ? '筛选结果' : '最近保存'}</h2><span>${memories.length} 条</span></div><div class="memory-grid">${memories.map(memoryCard).join('') || '<div class="empty">没有找到相关记忆<br><small>换个人物、地点或原话试试</small></div>'}</div>`;
+    <div class="section-head"><h2>${state.query || state.filter !== '全部' ? '筛选结果' : '最近保存'}</h2><span>${memories.length} 条</span></div><div class="memory-grid">${memories.map(memoryCard).join('') || `<div class="empty empty-action"><strong>${state.memories.length ? '没有找到相关记忆' : '从第一段家人故事开始'}</strong><small>${state.memories.length ? '换个人物、地点或原话试试' : 'AI 采访者会逐步提问，保存前由你确认'}</small><button class="primary" id="empty-capture">开始第一次采访</button></div>`}</div>`;
   root.querySelector('#quick-capture').onclick = () => { state.tab = 'capture'; render(); };
+  root.querySelector('#empty-capture')?.addEventListener('click', () => { state.tab = 'capture'; render(); });
   root.querySelector('#library-search').oninput = e => { state.query = e.target.value; renderLibrary(root); };
   root.querySelectorAll('[data-filter]').forEach(b => b.onclick = () => { state.filter = b.dataset.filter; renderLibrary(root); });
   root.querySelectorAll('[data-memory]').forEach(b => b.onclick = () => showMemory(b.dataset.memory));
@@ -132,6 +138,7 @@ function showMemoryForm(id = '') {
 }
 
 function renderCapture(root) {
+  if (window.renderKinVoiceInterview) return window.renderKinVoiceInterview(root);
   const prompt = state.prompts[0] || '今天想从哪一段故事开始？';
   root.innerHTML = `${pageIntro('引导式采访', '采集口述', '用一个好问题，换来一段可以留给下一代的真实声音。')}
     <div class="two-column"><section class="panel"><div class="panel-title"><h2>一次采访</h2><span>本地录音 · 可随时暂停</span></div><div class="form-field"><label for="narrator">这次和谁聊</label><input id="narrator" value="${esc(state.people[0]?.name || '')}" placeholder="例如：外婆"></div><div class="form-field"><label for="chosen-prompt">采访问题（可直接编辑）</label><textarea class="question-box" id="chosen-prompt">${esc(prompt)}</textarea><div class="prompt-list" id="prompt-list">${state.prompts.slice(1).map(p => `<button class="prompt" data-prompt="${esc(p)}">${esc(p)}</button>`).join('')}</div><button class="text-button" id="edit-prompts">编辑问题库 →</button></div><div class="form-field"><label>口述记录</label><div class="recording-area"><button class="record-button" id="record" aria-label="开始录音">●</button><div class="record-time" id="record-time">00:00</div><div class="record-state" id="record-state">点击开始录音，也可以直接输入文字</div><div id="recording-result">${state.recordedAudioURL ? '<audio controls src="' + state.recordedAudioURL + '"></audio>' : ''}</div></div></div><div class="form-field"><label for="transcript">文字草稿</label><textarea id="transcript" placeholder="录音后可粘贴或修改文字，整理时会保留原始措辞。">${esc(state.captureText || '')}</textarea></div><button class="primary" id="organize">✦ 整理成记忆草稿</button></section><aside class="side-guide"><section class="panel"><div class="panel-title"><h2>采访节奏</h2><span>3 个动作</span></div><div class="step-list"><div class="step active"><span class="step-mark">1</span><div><strong>先问一个具体问题</strong><small>从一道菜、一件旧物或一次远行开始，避免“讲讲你的一生”。</small></div></div><div class="step"><span class="step-mark">2</span><div><strong>保留原声和停顿</strong><small>录音是证据，也是情感。文字只作为更容易检索的入口。</small></div></div><div class="step"><span class="step-mark">3</span><div><strong>由家人确认</strong><small>AI 生成的是草稿，事实、称呼和授权权利由家人决定。</small></div></div></div></section><section class="panel"><div class="panel-title"><h2>今日提示</h2></div><p class="hint">${formatDate()} 适合问：家里有没有一件旧物，大家一看到就会想起一个人？</p></section></aside></div>`;
@@ -218,6 +225,6 @@ function exportData() {
   const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), memories: state.memories, people: state.people }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `kinvoice-family-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(url); notify('家庭资料已导出为 JSON');
 }
-function resetData() { if (!confirm('恢复演示数据会覆盖当前浏览器中的资料，确定继续？')) return; localStorage.removeItem(STORAGE_KEY); Object.assign(state, loadState()); state.tab = 'library'; state.filter = '全部'; state.query = ''; render(); notify('已恢复演示数据'); }
+function resetData() { if (!confirm('重新开始会删除当前浏览器中的资料，确定继续？')) return; localStorage.removeItem(STORAGE_KEY); Object.assign(state, loadState()); state.tab = 'library'; state.filter = '全部'; state.query = ''; render(); notify('已清空资料并重新开始'); }
 dialog.addEventListener('click', e => { if (e.target === dialog) closeDialog(); });
 render();

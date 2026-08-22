@@ -18,6 +18,8 @@ class FocusedAPITest(unittest.TestCase):
         paths = set(app.openapi()["paths"])
         self.assertIn("/v1/memories/draft", paths)
         self.assertIn("/v1/knowledge/ask", paths)
+        self.assertIn("/v1/interviews/next", paths)
+        self.assertIn("/v1/interviews/summarize", paths)
         self.assertNotIn("/tts", paths)
         self.assertNotIn("/replica/create", paths)
         self.assertNotIn("/chat", paths)

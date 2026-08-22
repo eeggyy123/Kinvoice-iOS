@@ -3,12 +3,21 @@
 from fastapi import APIRouter, Depends
 
 from app.schemas.memory_ai import (
+    InterviewNextRequest,
+    InterviewNextResponse,
+    InterviewSummarizeRequest,
+    InterviewSummarizeResponse,
     KnowledgeAskRequest,
     KnowledgeAskResponse,
     MemoryDraftRequest,
     MemoryDraftResponse,
 )
-from app.services.memory_ai_service import answer_from_memories, create_memory_draft
+from app.services.memory_ai_service import (
+    answer_from_memories,
+    create_memory_draft,
+    create_interview_summary,
+    generate_next_question,
+)
 from app.security import require_app_token
 from app.utils.logger import logger
 
@@ -48,3 +57,17 @@ async def ask_knowledge(request: KnowledgeAskRequest):
         citations=citations,
         grounded=grounded,
     )
+
+
+@router.post("/interviews/next", response_model=InterviewNextResponse)
+async def interview_next(request: InterviewNextRequest):
+    """Generate one short follow-up without persisting the interview."""
+    logger.info("interview next request: turns={}", len(request.turns))
+    return await generate_next_question(request)
+
+
+@router.post("/interviews/summarize", response_model=InterviewSummarizeResponse)
+async def interview_summarize(request: InterviewSummarizeRequest):
+    """Create review-required profile and memory drafts from user answers."""
+    logger.info("interview summarize request: turns={}", len(request.turns))
+    return await create_interview_summary(request)
